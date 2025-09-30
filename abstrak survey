@@ -1,0 +1,54 @@
+from abc import ABC, abstractmethod
+class Survey(ABC):
+   
+    def __init__(self, nama):
+        self.nama = nama
+        print(f"[{nama}] Survey dibuat.")
+
+    @abstractmethod
+    def processing(self):
+        pass
+
+
+class SeismicSurvey(Survey):
+    def __init__(self, nama, sumber_energi):
+        super().__init__(nama)
+        self.sumber_energi = sumber_energi
+
+    def processing(self):
+        print(f"[{self.nama}] Memproses data Seismik: Melakukan Time-Domain **Filtering** dan Stacking.")
+
+class GravitySurvey(Survey):
+    
+    def __init__(self, nama, resolusi):
+        super().__init__(nama)
+        self.resolusi = resolusi
+
+    def processing(self):
+        print(f"[{self.nama}] Memproses data Gravitasi: Mengaplikasikan **Upward Continuation** untuk separasi anomali.")
+
+class MagnetikSurvey(Survey):
+    def __init__(self, nama, kedalaman_pemetaan):
+        super().__init__(nama)
+        self.kedalaman_pemetaan = kedalaman_pemetaan
+
+    def processing(self):
+        print(f"[{self.nama}] Memproses data Magnetik: Membuat peta **Anomaly Mapping** dan Reduksi ke Kutub (RTP).")
+
+seismik1 = SeismicSurvey(nama="S-Area-1", sumber_energi="Airgun")
+graviti1 = GravitySurvey(nama="G-Proyek-2", resolusi="Tinggi")
+magnetik1 = MagnetikSurvey(nama="M-Blok-A", kedalaman_pemetaan=500)
+seismik2 = SeismicSurvey(nama="S-Area-2", sumber_energi="Vibroseis")
+
+print("\n" + "="*50)
+print("MEMULAI PROSES PEMROSESAN DATA SURVEI")
+print("="*50)
+
+daftar_survey = [seismik1, graviti1, magnetik1, seismik2]
+
+for survey in daftar_survey:
+    print(f"-> Memproses Survey: {survey.nama}")
+    survey.processing()
+    print("-" * 25)
+
+print("\nProses pemrosesan data selesai.")

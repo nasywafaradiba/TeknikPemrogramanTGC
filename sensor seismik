@@ -1,0 +1,82 @@
+class Sensor:
+    """"""
+    def __init__(self, id_sensor, lokasi, jenis):
+        """
+        Inisialisasi atribut id_sensor, lokasi, dan jenis sensor.
+
+        Args:
+            id_sensor (str atau int): Identifier unik untuk sensor.
+            lokasi (str): Lokasi fisik tempat sensor ditempatkan.
+            jenis (str): Jenis sensor (misalnya, 'Suhu', 'Tekanan', 'Getaran').
+        """
+        self.id_sensor = id_sensor
+        self.lokasi = lokasi
+        self.jenis = jenis
+
+    def info(self):
+        """
+        Menampilkan informasi detail tentang sensor.
+        """
+        print("--- Informasi Sensor ---")
+        print(f"ID Sensor: {self.id_sensor}")
+        print(f"Lokasi: {self.lokasi}")
+        print(f"Jenis Sensor: {self.jenis}")
+        print("-" * 22)
+
+
+class SensorSeismik(Sensor):
+    """
+    Representasi sensor seismik, turunan dari class Sensor.
+    Memiliki atribut tambahan frekuensi_sampling dan sebuah list untuk data amplitudo.
+    """
+    def __init__(self, id_sensor, lokasi, jenis, frekuensi_sampling, data_amplitudo=None):
+        """
+        Inisialisasi atribut SensorSeismik.
+
+        Args:
+            id_sensor (str atau int): Identifier unik untuk sensor.
+            lokasi (str): Lokasi fisik tempat sensor ditempatkan.
+            jenis (str): Jenis sensor (seharusnya 'Seismik' atau sejenisnya).
+            frekuensi_sampling (float): Frekuensi pengambilan sampel (dalam Hz).
+            data_amplitudo (list, opsional): List yang berisi nilai-nilai data amplitudo. Defaultnya adalah list kosong.
+        """
+        super().__init__(id_sensor, lokasi, jenis)
+        self.frekuensi_sampling = frekuensi_sampling
+        self.data_amplitudo = data_amplitudo if data_amplitudo is not None else []
+
+    def info(self):
+        """
+        Meng-override method info() untuk menampilkan informasi SensorSeismik,
+        termasuk frekuensi sampling.
+        """
+        super().info()
+        print(f"Frekuensi Sampling: {self.frekuensi_sampling} Hz")
+        print(f"Jumlah Sampel Data: {self.jumlah_sampel()}")
+        print("-" * 22)
+
+    def jumlah_sampel(self):
+        """
+        Menghitung dan mengembalikan jumlah data amplitudo yang telah direkam.
+
+        Returns:
+            int: Jumlah elemen dalam list data_amplitudo.
+        """
+        return len(self.data_amplitudo)
+    
+sensor_suhu = Sensor(id_sensor=101, lokasi="Ruang Server A", jenis="Suhu")
+sensor_suhu.info()
+
+print("\n")
+
+data_gempa = [0.7, 1.6, -0.4, 2.9, 0.3, -1.2, 0.7, 1.4]
+sensor_getaran = SensorSeismik(
+    id_sensor="SS-007",
+    lokasi="Gunung Api Merapi",
+    jenis="Seismik",
+    frekuensi_sampling=100.0,
+    data_amplitudo=data_gempa
+)
+
+sensor_getaran.info()
+
+print(f"Jumlah sampel data yang diambil SensorSeismik {sensor_getaran.id_sensor}: {sensor_getaran.jumlah_sampel()} data.")
