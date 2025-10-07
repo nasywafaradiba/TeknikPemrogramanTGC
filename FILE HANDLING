@@ -1,0 +1,27 @@
+with open("data.txt", "w") as f :
+    f.write("shot,receiver,twt\n")
+    f.write("0,100,200\n")
+    f.write("0,200,350\n")
+    f.write("0,300,450\n")
+    f.write("0,400,600\n")
+
+with open("data.txt", "r") as f :
+    lines = f.readlines()
+    n_twt = []
+    shot = []
+    receiver = []
+    twt = []
+    for line in lines :
+        print(line.strip())
+        if line.startswith("0"):
+            parts = line.split(",")
+            shot.append(int(parts[0]))
+            receiver.append(int(parts[1]))
+            twt.append(int(parts[2]))
+for i in range(len(twt)) :
+    n_twt.append((twt[i]-min(twt))/(600-min(twt)))
+print("n_twt =", n_twt)
+with open("data_normalized.txt", "w") as f :
+    f.write("shot,receiver,twt,n_twt\n")
+    for i in range(len(n_twt)) :
+        f.write(f"{shot[i]},{receiver[i]},{twt[i]},{n_twt[i]:.4f}\n")
