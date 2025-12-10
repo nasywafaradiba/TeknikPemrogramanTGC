@@ -1,0 +1,78 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
+
+np.random.seed(42)
+n_points = 100
+
+x_raw = np.random.uniform(0, 1000, n_points)
+y_raw = np.random.uniform(0, 1000, n_points)
+elevasi = np.random.uniform(100, 200, n_points)
+
+
+def generate_gravity(x, y):
+    z1 = 20 * np.exp(-((x - 300)**2 + (y - 700)**2) / (200**2)) 
+    z2 = -15 * np.exp(-((x - 700)**2 + (y - 300)**2) / (150**2)) 
+    noise = np.random.normal(0, 0.5, len(x)) 
+    return 50 + z1 + z2 + noise
+
+gravity_vals = generate_gravity(x_raw, y_raw)
+
+df = pd.DataFrame({
+    'X': x_raw,
+    'Y': y_raw,
+    'Elevasi': elevasi,
+    'Anomali_Gravitasi_mGal': gravity_vals
+})
+
+df.loc[10, 'Anomali_Gravitasi_mGal'] = np.nan 
+
+
+df.to_csv('survey_gravitasi.csv', index=False)
+
+print("--- Info Data ---")
+print(df.info())
+print("\n--- Statistik Deskriptif ---")
+print(df.describe())
+
+df_clean = df.dropna(subset=['Anomali_Gravitasi_mGal'])
+
+plt.figure(figsize=(8, 6))
+plt.scatter(df_clean['X'], df_clean['Y'], c='black', s=10, label='Titik Survei')
+plt.title('Sebaran Titik Pengukuran Gravitasi (Irregular)')
+plt.xlabel('X (Timur)')
+plt.ylabel('Y (Utara)')
+plt.legend()
+plt.show()
+
+x_min, x_max = df_clean['X'].min(), df_clean['X'].max()
+y_min, y_max = df_clean['Y'].min(), df_clean['Y'].max()
+
+grid_x, grid_y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+
+points = df_clean[['X', 'Y']].values
+values = df_clean['Anomali_Gravitasi_mGal'].values
+
+grid_linear = griddata(points, values, (grid_x, grid_y), method='linear')
+
+grid_cubic = griddata(points, values, (grid_x, grid_y), method='cubic')
+
+fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+
+contour1 = axes[0].contourf(grid_x, grid_y, grid_linear, levels=15, cmap='viridis')
+axes[0].scatter(df_clean['X'], df_clean['Y'], c='k', s=2, alpha=0.3) # Overlay titik asli
+axes[0].set_title('Interpolasi Metode: Linear')
+axes[0].set_xlabel('X (Meter)')
+axes[0].set_ylabel('Y (Meter)')
+plt.colorbar(contour1, ax=axes[0], label='Anomali Bouguer (mGal)')
+
+contour2 = axes[1].contourf(grid_x, grid_y, grid_cubic, levels=15, cmap='viridis')
+axes[1].scatter(df_clean['X'], df_clean['Y'], c='k', s=2, alpha=0.3) # Overlay titik asli
+axes[1].set_title('Interpolasi Metode: Cubic')
+axes[1].set_xlabel('X (Meter)')
+axes[1].set_ylabel('Y (Meter)')
+plt.colorbar(contour2, ax=axes[1], label='Anomali Bouguer (mGal)')
+
+plt.suptitle('Analisis Data Mikrogravitasi: Perbandingan Interpolasi', fontsize=16)
+plt.show()
