@@ -1,0 +1,78 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
+
+
+np.random.seed(42)
+n_points = 200
+
+x_raw = np.random.uniform(0, 1000, n_points)
+y_raw = np.random.uniform(0, 1000, n_points)
+elevasi = np.random.uniform(50, 150, n_points)
+
+def generate_gravity_anomaly(x, y):
+    z1 = 25 * np.exp(-((x - 300)**2 + (y - 700)**2) / (150**2))
+    z2 = -20 * np.exp(-((x - 700)**2 + (y - 300)**2) / (150**2))
+    noise = np.random.normal(0, 0.5, len(x))
+    return 50 + z1 + z2 + noise
+
+values_raw = generate_gravity_anomaly(x_raw, y_raw)
+
+df = pd.DataFrame({
+    'X': x_raw,
+    'Y': y_raw,
+    'Elevasi': elevasi,
+    'Anomali_Gravitasi_mGal': values_raw
+})
+
+df.loc[10, 'Anomali_Gravitasi_mGal'] = np.nan
+
+df.to_csv('survey_gravitasi.csv', index=False)
+print("File 'survey_gravitasi.csv' berhasil dibuat (simulasi).")
+
+print("\n--- 1. Info Data Awal ---")
+df_survey = pd.read_csv('survey_gravitasi.csv')
+print(df_survey.info())
+
+df_clean = df_survey.dropna(subset=['Anomali_Gravitasi_mGal'])
+print(f"\nJumlah data setelah cleaning: {len(df_clean)} baris")
+
+plt.figure(figsize=(8, 6))
+plt.scatter(df_clean['X'], df_clean['Y'], c=df_clean['Anomali_Gravitasi_mGal'], cmap='viridis', edgecolors='k')
+plt.colorbar(label='Anomali Gravitasi (mGal)')
+plt.title('Sebaran Titik Survei (Data Acak/Irregular)')
+plt.xlabel('X (Meter)')
+plt.ylabel('Y (Meter)')
+plt.show()
+
+grid_x_vals = np.linspace(df_clean['X'].min(), df_clean['X'].max(), 100)
+grid_y_vals = np.linspace(df_clean['Y'].min(), df_clean['Y'].max(), 100)
+
+grid_x, grid_y = np.meshgrid(grid_x_vals, grid_y_vals)
+
+points = df_clean[['X', 'Y']].values
+values = df_clean['Anomali_Gravitasi_mGal'].values
+
+grid_linear = griddata(points, values, (grid_x, grid_y), method='linear')
+
+grid_cubic = griddata(points, values, (grid_x, grid_y), method='cubic')
+
+fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+
+contour1 = axes[0].contourf(grid_x, grid_y, grid_linear, levels=20, cmap='RdBu_r') # Red=High, Blue=Low
+axes[0].scatter(df_clean['X'], df_clean['Y'], c='black', s=5, alpha=0.3) # Overlay titik survei
+axes[0].set_title('Metode Interpolasi: LINEAR')
+axes[0].set_xlabel('X (m)')
+axes[0].set_ylabel('Y (m)')
+fig.colorbar(contour1, ax=axes[0], label='Anomali (mGal)')
+
+contour2 = axes[1].contourf(grid_x, grid_y, grid_cubic, levels=20, cmap='RdBu_r')
+axes[1].scatter(df_clean['X'], df_clean['Y'], c='black', s=5, alpha=0.3)
+axes[1].set_title('Metode Interpolasi: CUBIC')
+axes[1].set_xlabel('X (m)')
+axes[1].set_ylabel('Y (m)')
+fig.colorbar(contour2, ax=axes[1], label='Anomali (mGal)')
+
+plt.suptitle('Analisis Mikrogravitasi: Identifikasi Struktur Bawah Permukaan', fontsize=16)
+plt.show()
